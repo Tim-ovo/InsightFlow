@@ -1,11 +1,47 @@
-<div align="center">
+# InsightFlow: Autonomous Data Analyst Agent
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+## 项目简介
+InsightFlow 是一款面向“复杂业务全链路分析”场景的 AI Data Analyst Agent 演示原型。该系统采用 Multi-Agent 架构，通过输入自然语言问题，系统自动完成从意图识别、数据提取到归因分析与报告生成的完整闭环。
 
-  <h1>Built with AI Studio</h2>
+本版本为 **Web Demo**，基于先进的前端技术（React + Vite）构建，专门适配演示环境。无需配置复杂的后端环境与真实数仓，即可流畅体验完整的业务逻辑过程。系统内置 Rule-based Engine 规则降级模式，确保在无大模型 API Key 情况下依然能稳定展示高质量分析结果。
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 功能说明
+1. **自然语言交互**：通过输入业务问题（例如：“为什么支付转化率下降了？”），一键触发分析流程。
+2. **多 Agent 状态实时可视化**：提供直观的 Agent Flow 进度看板，清晰展现出：
+   - Planner Agent (意图规划)
+   - Metric Agent (指标识别)
+   - Data Agent (数据获取)
+   - Diagnosis Agent (多维异常计算)
+   - Insight Agent (业务洞察提取)
+   - Report Agent (经营报告生成)
+3. **关键业务诊断报告**：内置高度封装的异常检测，自动下钻至渠道与商品层面，提取异常原因。
+4. **决策辅助可视化**：集成趋势图与通道组合图板，辅助人工二次研判。
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 安装步骤
+*(注意：在当前的 AI Studio 环境中，应用已预配置完毕，即可直接预览运行。)*
+如果您要在本地独立环境运行：
+1. 请确保已安装 Node.js (v18+)
+2. 在项目根目录执行：
+   \`npm install\`
 
-</div>
+## 运行命令
+\`npm run dev\`
+执行后系统将在本地 3000 端口启动。
+
+## API Key 配置方法
+本 Demo 已实装 Fallback 模式（基于 mock 数据的 Rule-based 状态机）。如果您希望接入真实的 Gemini / OpenAI 流程，可在这个环境底层的 `.env` 或者系统 Settings 面板中配置 \`GEMINI_API_KEY\`。当前展示使用预置的无 API 规则流演示体验。
+
+## 无 API 模式说明
+应用专门针对三种核心场景做了深度的规则模拟，即使不接入 LLM，系统也会走完从 Planner 到 Report 的 6 阶段，并稳定输出归因报告：
+1. 预构建精准的 mock 核心数据集（包含大盘概览、渠道、人群、单品分类四个维度）
+2. 预写多维度的洞察文案和置信度规则
+该设计确保 Demo 时无任何闪失和报错。
+
+## 演示问题示例
+请在系统输入栏输入或点击快捷按钮体验以下三大典型业务场景：
+1. **为什么这周支付转化率下降了？** ——（测试流量渠道变质与新客承接转化脱节分析环节）
+2. **为什么 GMV 涨了但利润下降了？** ——（测试商品结构恶化及高退款率导致利润流失分析环节）
+3. **哪个渠道最值得加预算？** ——（测试 ROI 反馈与渠道拉新模型拆解分析环节）
+
+---
+> 架构说明：本应用采用了单进程、多模块串联的轻量级并行渲染架构构建，能够顺滑地反映分析流的状态并无缝结合业务逻辑和最终报告渲染。
