@@ -1,5 +1,6 @@
 # InsightFlow: Autonomous Data Analyst Agent
 在线 Demo: https://tim-ovo.github.io/InsightFlow/
+Autonomous Data Analyst Agent for business anomaly diagnosis and decision support.
 ## 项目简介
 InsightFlow 是一款面向“复杂业务全链路分析”场景的 AI Data Analyst Agent 演示原型。该系统采用 Multi-Agent 架构，通过输入自然语言问题，系统自动完成从意图识别、数据提取到归因分析与报告生成的完整闭环。
 
