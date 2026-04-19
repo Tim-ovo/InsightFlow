@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { AgentFlow } from './AgentFlow';
 import { TrendChart, ChannelBarChart } from './Charts';
-import { executeAgent, AnalysisContext, AgentType } from '../lib/agents';
+import { executeAgent, AnalysisContext, AgentType, LocalDatasetInfo } from '../lib/agents';
 import { Search, Sparkles, TrendingUp, DollarSign, Target, AlertTriangle, ArrowRight, Lightbulb, Database, FileText } from 'lucide-react';
 import { overviewData, channelData } from '../data/mockData';
+import { DataUploadPanel } from './DataUploadPanel';
+import { LocalDataset } from '../lib/localDataStore';
 
 const presetQuestions = [
   "为什么这周支付转化率下降了？",
@@ -19,6 +21,7 @@ export function Dashboard() {
   const [currentAgent, setCurrentAgent] = useState<AgentType | null>(null);
   const [statusText, setStatusText] = useState("");
   const [result, setResult] = useState<AnalysisContext | null>(null);
+  const [activeDataset, setActiveDataset] = useState<LocalDataset | null>(null);
 
   const handleAnalyze = async (q: string) => {
     if (!q) return;
@@ -26,7 +29,22 @@ export function Dashboard() {
     setIsAnalyzing(true);
     setResult(null);
     
-    let context: AnalysisContext = { question: q };
+    let activeDatasetInfo: LocalDatasetInfo | undefined;
+    if (activeDataset) {
+      activeDatasetInfo = {
+        id: activeDataset.id,
+        name: activeDataset.name,
+        columns: activeDataset.columns,
+        rowCount: activeDataset.rowCount,
+        colCount: activeDataset.colCount,
+        previewData: activeDataset.previewData
+      };
+    }
+
+    let context: AnalysisContext = { 
+      question: q,
+      activeDataset: activeDatasetInfo
+    };
     
     for (const agent of agentsList) {
       setCurrentAgent(agent);
@@ -43,16 +61,18 @@ export function Dashboard() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-white border border-gray-800">
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">InsightFlow</h1>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Timovo</h1>
             <p className="text-xs text-gray-500 font-medium">Autonomous Data Analyst Agent</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500 hidden md:block">当前模式: Rule-based Engine Fallback</span>
+          <span className={`text-sm px-3 py-1 rounded-full font-medium ${activeDataset ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>
+            当前模式: {activeDataset ? '本地数据分析' : 'Mock 数据引擎'}
+          </span>
           <div className="h-8 w-8 bg-gray-200 rounded-full border-2 border-white shadow-sm overflow-hidden">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Analyst" alt="User" />
           </div>
@@ -60,9 +80,20 @@ export function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+        {/* Upload Section */}
+        <DataUploadPanel 
+          activeDatasetId={activeDataset?.id || null} 
+          onDatasetSelect={setActiveDataset} 
+        />
+
         {/* Search Section */}
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">你需要分析什么业务问题？</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">你需要分析什么业务问题？</h2>
+          <p className="text-sm text-gray-500 text-center mb-6">
+            {activeDataset 
+              ? `当前正基于数据集「${activeDataset.name}」进行分析` 
+              : '默认使用系统内置的电商 Mock 样本集进行诊断'}
+          </p>
           <div className="max-w-3xl mx-auto relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
@@ -153,8 +184,49 @@ export function Dashboard() {
 
               {/* Charts area based on question context */}
               <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">关键数据图表</h3>
-                {question.includes('渠道') ? (
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">关键数据视图</h3>
+                {activeDataset ? (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">本地数据集预览 - 前 5 行</p>
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            {activeDataset.columns.slice(0, 8).map(col => (
+                              <th key={col} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {col}
+                              </th>
+                            ))}
+                            {activeDataset.columns.length > 8 && (
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">...</th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {activeDataset.previewData.map((row: any, idx: number) => (
+                            <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                              {activeDataset.columns.slice(0, 8).map(col => (
+                                <td key={col} className="px-4 py-2 text-sm text-gray-500 truncate max-w-[150px]">
+                                  {row[col]}
+                                </td>
+                              ))}
+                              {activeDataset.columns.length > 8 && (
+                                <td className="px-4 py-2 text-sm text-gray-500">...</td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-4 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100 flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium text-indigo-900">数据离线分析模式</h4>
+                        <p className="text-xs text-indigo-700 mt-1">由于当前未连接云端大语言模型，图表组件已自动休眠，仅展示基础抽取验证结构。数据仅在您本地浏览器处理，绝对安全。</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : question.includes('渠道') ? (
                   <>
                     <p className="text-sm text-gray-500 mb-2">各渠道投入与产出对比 (10月6日-7日)</p>
                     <ChannelBarChart data={channelData} />

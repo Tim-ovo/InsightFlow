@@ -22,12 +22,15 @@ export function AgentFlow({ activeId, statusText }: { activeId: string | null, s
       </h3>
       
       <div className="flex justify-between items-start relative px-4">
-        {/* Background connector line */}
-        <div className="absolute top-6 left-10 right-10 h-0.5 bg-gray-100 z-0"></div>
-        
-        {/* Animated active line */}
-        <div className="absolute top-6 left-10 h-0.5 bg-indigo-500 z-0 transition-all duration-500" 
-             style={{ width: `${Math.max(0, (activeIndex / (agentSteps.length - 1)) * 100)}%` }}></div>
+        {/* Line wrapper to constrain progress bar width exactly between first and last icons */}
+        <div className="absolute top-6 left-16 right-16 h-0.5 z-0">
+          {/* Background connector line */}
+          <div className="absolute inset-0 bg-gray-100 rounded-full"></div>
+          
+          {/* Animated active line */}
+          <div className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full transition-all duration-500" 
+               style={{ width: `${Math.max(0, (activeIndex / (agentSteps.length - 1)) * 100)}%` }}></div>
+        </div>
              
         {agentSteps.map((step, index) => {
           const isActive = index === activeIndex;

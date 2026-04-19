@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Timovo",
+  "description": "这个是一个面向复杂经营问题的 Autonomous Data Analyst Agent，里面内置了六个agent，能够围绕自然语言问题自动完成指标识别、异常检测、多维归因和策略建议生成，实现从提问到决策报告的全链路闭环",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

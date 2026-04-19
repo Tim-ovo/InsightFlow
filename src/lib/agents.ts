@@ -1,5 +1,14 @@
 import { overviewData, channelData, userData, productData } from '../data/mockData';
 
+export interface LocalDatasetInfo {
+  id: string;
+  name: string;
+  columns: string[];
+  rowCount: number;
+  colCount: number;
+  previewData: any[];
+}
+
 export type AgentType = 'Planner' | 'Metric' | 'Data' | 'Diagnosis' | 'Insight' | 'Report';
 
 export interface AnalysisContext {
@@ -10,6 +19,7 @@ export interface AnalysisContext {
   diagnosis?: any;
   insights?: string[];
   report?: any;
+  activeDataset?: LocalDatasetInfo | null;
 }
 
 export const executeAgent = async (
@@ -21,6 +31,52 @@ export const executeAgent = async (
   await new Promise(resolve => setTimeout(resolve, 800));
 
   const lowercaseQ = context.question.toLowerCase();
+
+  if (context.activeDataset) {
+    const ds = context.activeDataset;
+    switch (agentType) {
+      case 'Planner':
+        onProgress(`分析自定义数据集 [${ds.name}] 的结构...`);
+        context.plan = `目标：针对本地数据集 [${ds.name}] 探索并解答用户问题：“${context.question}”。路径：1.解析字段集合 -> 2.匹配自然语言意图 -> 3.返回数据概览与初步诊断。`;
+        break;
+      case 'Metric':
+        onProgress('匹配相关字段...');
+        context.metrics = ds.columns.slice(0, 3);
+        break;
+      case 'Data':
+        onProgress(`提取并装载 ${ds.name} 数据 (共 ${ds.rowCount} 行)...`);
+        context.dataKeys = [ds.name];
+        break;
+      case 'Diagnosis':
+        onProgress('尝试进行本地特征抽取...');
+        context.diagnosis = {
+          structure: `共 ${ds.rowCount} 行, ${ds.colCount} 列`,
+          fields: `包含字段: ${ds.columns.slice(0, 5).join(', ')}${ds.columns.length > 5 ? ' 等' : ''}`,
+          fallbackInfo: '已完成基础结构扫描。因离线模式且结构未知，暂未下钻深层异常原因。'
+        };
+        break;
+      case 'Insight':
+        onProgress('生成自定义数据响应摘要...');
+        context.insights = [
+          `数据集 ${ds.name} 已成功加载。`,
+          `基于目前提供的非结构化字段，系统将优雅降载为基础信息摘要模式。如果需要复杂归因，请通过大模型 API 连接真实 Agent 对话。`
+        ];
+        break;
+      case 'Report':
+        onProgress('生成本地数据诊断报告...');
+        context.report = {
+          summary: `已基于您上传的本地数据集 [${ds.name}] 进行上下文绑定。由于本地模式无通用 LLM 分析能力，已为您完成数据抽取验证和意图匹配。您问的是：${context.question}`,
+          recommendations: [
+            { level: '高', text: '确认本地数据字段完整无误后，考虑增加更多的强特征列。' },
+            { level: '中', text: '尝试对数值型字段进行标准化处理。' },
+            { level: '低', text: '接入大模型继续深化归因能力。' }
+          ],
+          confidence: '70%'
+        };
+        break;
+    }
+    return context;
+  }
 
   switch (agentType) {
     case 'Planner':
